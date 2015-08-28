@@ -6,10 +6,18 @@ import simpy
 import random
 
 
-#simulacion de llegada de procesos
+
+#
+#Simulamos entra en la ram :)
+#
 def proceso(env,tiempo_entre_procesos,name, memoria_disponible, instrucciones, procesador):
-
-
+    global tiempo_total # timepo que se acumula
+    yield env.timeout(tiempo_entre_procesos) #el proceso espera para entrar a la memoria
+    print ('(NEW)%s usa: memoria ram = %d en tiempor= %f' %(name,memoria_usada, env.now)) # nos muestra el timepo en memoria , la cantidad de memoria y el nombre del proceso
+    tiempoInicial=env.now #el timepo en que llega el proceso
+    yield memoria_disponible.get(memoria_usada)
+    print('(ADMITED)%s Entra en la memoria ram, por tiempo %t'%(name,env.now)# nos dice aunto tiempo esta en la ram y nos avisa que entro.
+    
 
 
 
