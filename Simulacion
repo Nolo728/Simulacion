@@ -5,10 +5,8 @@
 import simpy
 import random
 
-
-
 #
-#Simulamos entra en la ram :)
+#Simulamos
 #
 def proceso(env,tiempo_entre_procesos,name, memoria_disponible, instrucciones, procesador):
     global tiempo_total # timepo que se acumula
@@ -16,11 +14,35 @@ def proceso(env,tiempo_entre_procesos,name, memoria_disponible, instrucciones, p
     print ('(NEW)%s usa: memoria ram = %d en tiempor= %f' %(name,memoria_usada, env.now)) # nos muestra el timepo en memoria , la cantidad de memoria y el nombre del proceso
     tiempoInicial=env.now #el timepo en que llega el proceso
     yield memoria_disponible.get(memoria_usada)
-    print('(ADMITED)%s Entra en la memoria ram, por tiempo %t'%(name,env.now)# nos dice aunto tiempo esta en la ram y nos avisa que entro.
+    print('(ADMITED)%s Entra en la memoria ram, por tiempo %t'%(name,env.now))# nos dice aunto tiempo esta en la ram y nos avisa que entro.
     
+    #
+    # Lo atiende el CPU
+    #
+    listo = 0
+    
+    while listo < instrucciones:
+        
+        with cpu.request() as req:
+            yield req
+            if(instrucciones-listo)>=3:
+                menos=3
+            else:
+                menos=(instrucciones-listo)# cuantas instrucciones quedan
+            print ('(READY)%s cpu hace %d instrucciones en tiempo: t%' %(name, menos, env.now))#estoy en el cpu
+            yield env.timeout(menos/procesador)#cuanto timepo hay que esperar
+            listo= listo+eje
+            print('(RUN)%s el cpu hace lo suyo,(%p/%d)buferring, en tiempo: %n'%(name, listo,instrucciones,env.now))# imprimer que se esta corriendo
+        sigo=random.randint(1,2)# 1: va a la cola, 2:esta listo
+        if sigo==1 and listo<instrucciones:
+            with waiting.request() as req2:
+                yield req2
+                yield env.timeout(1)
+                print('(WAITING)%s en tiemp: %t'%(name,env.now))
 
-
-
+memoria_disponible.put(memoria_usada)
+print('(TERMINATED) %s finito, regresa %d memoria en timepo %f'%(name, memoria_usada,env.now))
+tiempo_total=tiempo_total+(env.now-tiempoInicial)
 
 #
 # DATOS A UTILIZAR
@@ -36,10 +58,9 @@ intervalo=10
 # Se crea las limitaciones de memoria y del cpu
 #
 env=simpy.Enviroment() # para usar el container y el resource
-memoria_disponible= simpy.container (env, init=memorias, memorias)# la capacidad de la memoria
+memoria_disponible = simpy.Container (env, init=memorias, capacity=memorias)# la capacidad de la memoria
 cpu=simpy.Resource(env, capacidad=1)
 espera=simpy.Resource (env, capacidad=1)
-
 
 
 
@@ -48,7 +69,12 @@ espera=simpy.Resource (env, capacidad=1)
 #
 random.seed(1234) # creamos la semilla del random como dice el documento
 for i in range (procesos):# creamos los procesos
-tiempo_entre_procesos=random.expovariate(1.0 / intervalo)# hacemos eltiempo entre procesos
-memoria_usada=random.randint(1,20)# damos un random para saber cunata memoria puede usar
-instrucciones=random.randint(1,10)# damos un random para la cantidad de intrucciones por proceso
-env.process(procesoP(env,tiempo_entre_procesos,' Proceso %d'%i, memoria_disponible,instrucciones,procesador)) # comenzamos
+    tiempo_entre_procesos=random.expovariate(1.0 / intervalo)# hacemos eltiempo entre procesos
+    memoria_usada=random.randint(1,20)# damos un random para saber cunata memoria puede usar
+    instrucciones=random.randint(1,10)# damos un random para la cantidad de intrucciones por proceso
+    env.process(procesoP(env,tiempo_entre_procesos,' Proceso %d'%i, memoria_disponible,instrucciones,procesador)) # comenzamos
+
+
+env.run()
+print "El PROMEDIO de tiempo por proceso es ", tiempo_total / procesos
+print "fin"
