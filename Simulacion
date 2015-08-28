@@ -1,0 +1,46 @@
+# Algoritmos y Estructura de Datos
+# Simulacion de procesos en una computadora
+# Michelle Bartra 14384
+# Manolo Benegas 14180
+import simpy
+import random
+
+
+#simulacion de llegada de procesos
+def proceso(env,tiempo_entre_procesos,name, memoria_disponible, instrucciones, procesador):
+
+
+
+
+
+
+#
+# DATOS A UTILIZAR
+#
+
+memorias=100
+procesador=3.0
+tiempo_total=0.0
+procesos=25
+intervalo=10
+
+#
+# Se crea las limitaciones de memoria y del cpu
+#
+env=simpy.Enviroment() # para usar el container y el resource
+memoria_disponible= simpy.container (env, init=memorias, memorias)# la capacidad de la memoria
+cpu=simpy.Resource(env, capacidad=1)
+espera=simpy.Resource (env, capacidad=1)
+
+
+
+
+#
+# CREO el proceso
+#
+random.seed(1234) # creamos la semilla del random como dice el documento
+for i in range (procesos):# creamos los procesos
+tiempo_entre_procesos=random.expovariate(1.0 / intervalo)# hacemos eltiempo entre procesos
+memoria_usada=random.randint(1,20)# damos un random para saber cunata memoria puede usar
+instrucciones=random.randint(1,10)# damos un random para la cantidad de intrucciones por proceso
+env.process(procesoP(env,tiempo_entre_procesos,' Proceso %d'%i, memoria_disponible,instrucciones,procesador)) # comenzamos
